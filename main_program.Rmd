@@ -1,0 +1,98 @@
+---
+title: "main_program"
+author: "Shangsi Lin"
+date: "2025-01-30"
+output: html_document
+---
+Welcome to the nested pro program, go ahead and start clicking.
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Add the function for ppm calculation
+ppm = function(observed, theo){
+  if(abs((observed - theo) / theo * 10^6) > 10) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+
+source("introduction.R")
+source("blind_seq.R")
+
+# get your dictionary file ready
+dictionary = read_xlsx("Data/uni_dictionary.xlsx")
+dictionary = dictionary[c(1, 2, 3, 4),] #make adjustment to the dictionary if you want to restrict choice range
+```
+
+```{r, echo = FALSE, warning=FALSE}
+# first variable: the name of your sample
+# second variable: sequence of your sample(for RNA, it is 5')
+# third variable: data file location
+# fourth variable: sample type(synthetic_RNA/natural_RNA/peptide)
+# fifth variable: the intact mass limit for your sample(ex. >= 24000Da)
+# sixth variable: the number of interval detected lower limit set for filtering purpose 
+# N100M: "CCUCAUGAGcCACGGAACUCUUGAGUUGCGAUUCCGGUACUCGACCAAUGCGCACGCUGUAUGUCAAUACCGACGAUCUACAGUAGUAUgCGGUACAGAA"
+# N100N："GGCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCCGUU"
+
+set_up("N100N", "GGCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCCGUU", "Data/100mer_data/N100N/N100N_5min_T01_250204_LSS.xlsx", "synthetic_RNA", 22000, 0)
+
+prophet_5 = prophet(df, theo_5) #this will be the data frame for matching result, not sequencing, it acts as a verification
+prophet_3 = prophet(df, theo_3) #this will be the data frame for matching result, not sequencing, it acts as a verification
+
+dictionary = dictionary[c(1, 2, 3, 4),] #change disctionary used for sequencing 
+
+# first variable: your data frame
+# second variable: your dictionary
+algorithm_output = blind_seq(df, dictionary) #blind sequencing
+
+#check
+```
+
+```{r general_2D_plots, echo = FALSE, warning=FALSE}
+source("plotting.R")
+# first variable: your data frame
+# second variable: whether you want the points to be labeled with mass or not(TRUE/FALSE)
+# third vairable: time limit for your plot(usually depends on your method settin of MS)
+plot_mass_rt(df, TRUE, 25)
+plot_mass_rt(intact_df, TRUE, 20)
+
+# first variable: your data frame
+# second variable: whether you want the points to be labeled with mass or not(TRUE/FALSE)
+plot_mass_intensity(df, TRUE)
+plot_mass_intensity(intact_df, TRUE)
+
+# first variable: data frame of matching result
+# second variable: your ladder type("5"/"3"/"N"/"C")
+mass_match_table(prophet_5, "5")
+mass_match_table(prophet_3, "3")
+
+# first variable: sample name
+# second variable: intact mass of the sample
+# third variable: location of the data file
+# fourth variable: upper bound of your defined intact mass region
+# fifth variable: lower bound of your defined intact mass region
+homology_search(sample_name, intact_weight, file_location, 32000, 35000)
+
+# first variable: your matched data frame
+# second variable: the name of the ladder you matched to
+plot_prophet(prophet_5, "5'")
+plot_prophet(prophet_3, "3'")
+
+# first variable: first data frame for mass matching result
+# second variable: second data frame for mass matching result
+# third variable: name of the first ladder being used for matching
+# fourth variable: name of the second ladder being used for matching
+plot_position_abundance(prophet_5, prophet_3, "5' ladder", "3' ladder")
+```
+
+```{r blind_seq_result, echo = FALSE, warning=FALSE}
+# first variable: the output data frame from nested algorithm
+# second variable: the minimum length for ladders you want to include in your result file
+# third variable: the location of your original data file
+output_ladders_found(algorithm_output, 10, file_location)
+
+# first variable: the point version result file location
+plot_ladders("Result/blind_sequencing_result_point_version.xlsx")
+```
+
