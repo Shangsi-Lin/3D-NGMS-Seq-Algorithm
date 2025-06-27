@@ -1,0 +1,42 @@
+---
+title: "adduct_finder"
+author: "Shangsi Lin"
+date: "2025-02-02"
+output: html_document
+---
+Welcome to the adduct finder program, this program is designed under the assumption that you have a reference sequence ready.
+```{r setup, include=FALSE, echo = FALSE, warning=FALSE}
+source("introduction.R")
+source("plotting.R")
+# get your dictionary file ready
+dictionary = read_xlsx("Data/uni_dictionary.xlsx")
+```
+
+```{r PylF2}
+# Example: here we try to find the 5' ladder with sodium adduct
+# First variable: the data frame from experiment
+# Scond variable: the data frame of theoretical mass ladder
+# Third variable: the mass of your adduct(a numeric variable)
+# Fourth variable: the name of your adduct(a string varaible)
+theo_5_H2O = theo_creater(df, theo_5, -18.0068, "dehydrated 5'", 71, TRUE)
+theo_5_569H2O = theo_creater(df, theo_5, 38.9106, "dehydrated 56.9 adducted 5'")
+theo_5_56 = theo_creater(df, theo_5, 56.9207, "56.9 adducted 5'")
+theo_5_ms2i6A = theo_creater(df, theo_5, 114.0575, "ms2i6A 5'")
+theo_5_56_ms2i6A = theo_creater(df, theo_5, 170.9703, "56.9 adducted ms2i6A 5'")
+theo_5_96 = theo_creater(df, theo_5, 96.03740, "dehydrated ms2i6A 5'")
+theo_5_i6A = theo_creater(df, theo_5, 68.0688, "i6A 5'")
+theo_3_56 = theo_creater(df, theo_3, 56.91729, "56.9 adducted 3'")
+theo_3_113 = theo_creater(df, theo_3, 113.83469, "2*56.9 adducted 3'")
+theo_3_ms2i6A = theo_creater(df, theo_3, 114.04806, "ms2i6A 3'")
+theo_3_Na = theo_creater(df, theo_3, 21.97837, "Na adducted 3'")
+theo_3_56_ms2i6A = theo_creater(df, theo_3, 170.86366, "56.9 adducted ms2i6A 3'")
+theo_3_i6A = theo_creater(df, theo_3, 68.0675, "i6A 3'", 71, FALSE)
+temp_df = rbind(theo_5_H2O, theo_5_569H2O, theo_5_56, theo_5_ms2i6A, theo_5_56_ms2i6A, theo_5_96, theo_5_i6A, theo_3_56, theo_3_113, theo_3_ms2i6A, theo_3_Na, theo_3_56_ms2i6A, theo_3_i6A)
+new_theo_3 = theo_creater(df, theo_3, 0, "native 3'")
+new_theo_5 = theo_creater(df, theo_5, 0, "native 5'")
+write_xlsx(rbind(new_theo_3,new_theo_5), "temp.xlsx")
+
+```
+
+
+

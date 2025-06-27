@@ -1,0 +1,101 @@
+---
+title: "figure5"
+author: "Shangsi Lin"
+date: "2025-01-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("figure5.R")
+```
+
+```{r Figure5d, fig.width=10, fig.height=4}
+df=read_xlsx("Result/Figure5/100N_plot.xlsx") %>% 
+  janitor::clean_names()
+
+df <- df %>%
+  mutate(point_size = ifelse(ladder_type == "Intact", 3.5, 2.5))  
+
+ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt, 
+               color = log10(sum_intensity), 
+               shape = ladder_type, 
+               group = ladder_type)) +
+  geom_point(aes(size = point_size)) +  
+  geom_line(color = "gray34", alpha = 0.5) +  
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, max(df$monoisotopic_mass, na.rm = TRUE), by = 2)) +
+  scale_y_continuous(name = "Retention Time (min)", limits = c(0,19), breaks = seq(0, 19, by = 2)) +
+  labs(color = "Log10(Intensity)", shape = "Ladder Type", size = "Ladder Type") +  
+  guides(
+    shape = guide_legend(order = 1),  
+    color = guide_colorbar(order = 2) 
+  ) +
+  theme_classic() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 10)
+  ) +
+  scale_color_gradientn(colors = turbo(256)) +  
+  scale_size_identity()  
+```
+
+```{r Figure5c, fig.width=10, fig.height=4}
+df=read_xlsx("Result/Figure5/100M_plot.xlsx") %>% 
+  janitor::clean_names()
+
+df <- df %>%
+  mutate(point_size = ifelse(ladder_type == "Intact", 3.5, 2.5))
+
+ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt, 
+               color = log10(sum_intensity), 
+               shape = ladder_type, 
+               group = ladder_type)) +
+  geom_point(aes(size = point_size)) + 
+  geom_line(color = "gray34", alpha = 0.5) + 
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, max(df$monoisotopic_mass, na.rm = TRUE), by = 2)) +
+  scale_y_continuous(name = "Retention Time (min)", limits = c(0, 19), breaks = seq(0, 19, by = 2)) +
+  labs(color = "Log10(Intensity)", shape = "Ladder Type", size = "Ladder Type") +  
+  theme_classic() +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 10)
+  ) +
+  scale_color_gradientn(colors = turbo(256)) + 
+  scale_size_identity()  
+```
+
+```{r Figure5e}
+plot_mixture("Result/Figure5/100NM19_plot.xlsx")
+plot_mixture("Result/Figure5/100NM55_plot.xlsx")
+plot_mixture("Result/Figure5/100NM91_plot.xlsx")
+```
+
+```{r Figure5f, fig.width=10, fig.height=4}
+df = read_xlsx("Result/Figure5/mixture_coverage.xlsx") 
+df = head(df, 10)
+
+ggplot(df, aes(x = sgRNA1_percentage, y = coverage, fill = sgRNA_type)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 2.5), width = 2) +
+  labs(
+    x = "Percentage sgRNA1 in mixture(%)",
+    y = "Percent Sequence Coverage(%)",
+    fill = "sgRNA Type"
+  ) +
+  scale_x_continuous(breaks = c(10, 30, 50, 70, 90)) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1")
+```
+
+```{r}
+df=read_xlsx("Result/Figure5/100M_plot.xlsx") %>% 
+  janitor::clean_names()
+```
+

@@ -22,7 +22,7 @@ source("blind_seq.R")
 
 # get your dictionary file ready
 dictionary = read_xlsx("Data/uni_dictionary.xlsx")
-dictionary = dictionary[c(1, 2, 3, 4),] #make adjustment to the dictionary if you want to restrict choice range
+#dictionary = dictionary[c(1, 2, 3, 4),] #make adjustment to the dictionary if you want to restrict choice range
 ```
 
 ```{r, echo = FALSE, warning=FALSE}
@@ -32,13 +32,16 @@ dictionary = dictionary[c(1, 2, 3, 4),] #make adjustment to the dictionary if yo
 # fourth variable: sample type(synthetic_RNA/natural_RNA/peptide)
 # fifth variable: the intact mass limit for your sample(ex. >= 24000Da)
 # sixth variable: the number of interval detected lower limit set for filtering purpose 
-# N100M: "CCUCAUGAGcCACGGAACUCUUGAGUUGCGAUUCCGGUACUCGACCAAUGCGCACGCUGUAUGUCAAUACCGACGAUCUACAGUAGUAUgCGGUACAGAA"
-# N100N："GGCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCCGUU"
 
-set_up("N100N", "GGCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCCGUU", "Data/100mer_data/N100N/N100N_5min_T01_250204_LSS.xlsx", "synthetic_RNA", 22000, 0)
+set_up("100N", "GUCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUU", "Data/100mer_data/mixture/Suyue/100nt_10_M_NonM_70_30_AD.xlsx", "synthetic_RNA", 22000, 0)
 
 prophet_5 = prophet(df, theo_5) #this will be the data frame for matching result, not sequencing, it acts as a verification
 prophet_3 = prophet(df, theo_3) #this will be the data frame for matching result, not sequencing, it acts as a verification
+
+set_up("100M", "AGuCGGaUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUuUU", "Data/100mer_data/mixture/Suyue/100nt_10_M_NonM_70_30_AD.xlsx", "synthetic_RNA", 22000, 0)
+
+prophet_5_M = prophet(df, theo_5) #this will be the data frame for matching result, not sequencing, it acts as a verification
+prophet_3_M = prophet(df, theo_3) #this will be the data frame for matching result, not sequencing, it acts as a verification
 
 dictionary = dictionary[c(1, 2, 3, 4),] #change disctionary used for sequencing 
 
@@ -94,5 +97,23 @@ output_ladders_found(algorithm_output, 10, file_location)
 
 # first variable: the point version result file location
 plot_ladders("Result/blind_sequencing_result_point_version.xlsx")
+```
+
+```{r native_ladder_file_generation}
+new_theo_5 = theo_creater(df, theo_5, 0, "5'", 100, TRUE)
+new_theo_3 = theo_creater(df, theo_3, 0, "3'", 100, FALSE)
+#base_name	monoisotopic_mass	sum_intensity	apex_rt	ladder_type	position
+temp = rbind(new_theo_3 %>% select(base_name, monoisotopic_mass, sum_intensity,	apex_rt,	ladder_type,	n_position),
+             new_theo_5 %>% select(base_name, monoisotopic_mass, sum_intensity,	apex_rt,	ladder_type,	n_position))
+write_xlsx(temp, "Result/Figure5/100N_plot.xlsx")
+```
+
+```{r mixture_file_generation}
+temp = rbind(prophet_3 %>% select(base_name, monoisotopic_mass, sum_intensity, apex_rt) %>% mutate(sgRNA = "sgRNA1"),
+             prophet_5 %>% select(base_name, monoisotopic_mass, sum_intensity, apex_rt) %>% mutate(sgRNA = "sgRNA1"),
+             prophet_3_M %>% select(base_name, monoisotopic_mass, sum_intensity, apex_rt) %>% mutate(sgRNA = "sgRNA2"),
+             prophet_5_M %>% select(base_name, monoisotopic_mass, sum_intensity, apex_rt) %>% mutate(sgRNA = "sgRNA2"))
+
+write_xlsx(temp, "Result/Figure5/100NM37_plot.xlsx")
 ```
 
