@@ -45,7 +45,8 @@ ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt,
 
 ```{r Figure5c, fig.width=10, fig.height=4}
 df=read_xlsx("Result/Figure5/100M_plot.xlsx") %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  slice(-77)
 
 df <- df %>%
   mutate(point_size = ifelse(ladder_type == "Intact", 3.5, 2.5))
@@ -69,7 +70,7 @@ ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt,
     legend.text = element_text(size = 10)
   ) +
   scale_color_gradientn(colors = turbo(256)) + 
-  scale_size_identity()  
+  scale_size_identity()
 ```
 
 ```{r Figure5e}
@@ -78,8 +79,8 @@ plot_mixture("Result/Figure5/100NM55_plot.xlsx")
 plot_mixture("Result/Figure5/100NM91_plot.xlsx")
 ```
 
-```{r Figure5f, fig.width=10, fig.height=4}
-df = read_xlsx("Result/Figure5/mixture_coverage.xlsx") 
+```{r Figure5f, fig.width=15, fig.height=4}
+df = read_xlsx("Result/Figure5/mixture_coverage.xlsx")
 df = head(df, 10)
 
 ggplot(df, aes(x = sgRNA1_percentage, y = coverage, fill = sgRNA_type)) +
@@ -96,6 +97,58 @@ ggplot(df, aes(x = sgRNA1_percentage, y = coverage, fill = sgRNA_type)) +
 
 ```{r}
 df=read_xlsx("Result/Figure5/100M_plot.xlsx") %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  filter(ladder_type == "5'")
+
+filtered_df <- df %>%
+  filter(monoisotopic_mass >= 1200 & monoisotopic_mass <= 4000) %>%
+  mutate(row_id = row_number())
+
+a_indices <- filtered_df %>%
+  filter(base_name == "a") %>%
+  pull(row_id)
+
+line_segments <- data.frame()
+
+for (i in 1:(nrow(filtered_df) - 1)) {
+  current_id <- filtered_df$row_id[i]
+  next_id <- filtered_df$row_id[i + 1]
+  
+  if ((current_id %in% a_indices) | (next_id %in% a_indices)) next
+
+  line_segments <- bind_rows(line_segments, data.frame(
+    x = filtered_df$monoisotopic_mass[i],
+    y = filtered_df$apex_rt[i],
+    xend = filtered_df$monoisotopic_mass[i + 1],
+    yend = filtered_df$apex_rt[i + 1]
+  ))
+}
+
+points_df <- filtered_df %>% filter(base_name != "a")
+
+ggplot() +
+  geom_point(
+    data = points_df,
+    aes(x = monoisotopic_mass, y = apex_rt),
+    color = "steelblue",
+    size = 3
+  ) +
+  geom_segment(
+    data = line_segments,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    color = "grey60",
+    size = 1.2
+  ) +
+  labs(
+    x = "Monoisotopic Mass (Da)",
+    y = "Retention Time (min)"
+  ) +
+  theme_minimal(base_size = 14) +  # 设置整体基础字号
+  theme(
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14)
+  )
+
+
 ```
 

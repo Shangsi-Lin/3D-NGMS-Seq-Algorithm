@@ -1,0 +1,203 @@
+---
+title: "figure3"
+author: "Shangsi Lin"
+date: "2025-04-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r}
+source("introduction.R")
+ppm = function(observed, theo){
+  if(abs((observed - theo) / theo * 10^6) > 10) {
+    return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+dictionary = read_xlsx("Data/dictionary.xlsx")
+```
+
+```{r}
+figure3a_df = read_xlsx("Result/Figure5/100N_plot.xlsx") %>% 
+  filter(as.numeric(n_position) < 80, !is.na(sum_intensity), ladder_type == "3'") %>% 
+  mutate(ratio = 1)
+
+
+for(i in 2:nrow(figure3a_df)){
+  figure3a_df[i,7] = figure3a_df[i,3]/figure3a_df[(i-1),3]
+}
+
+avg_ratio = mean(figure3a_df$ratio)
+var_ratio = var(figure3a_df$ratio)
+
+ggplot(figure3a_df, aes(x = as.factor(n_position
+                                      ), y = ratio, fill = ratio > 1)) +
+  geom_col() + 
+  geom_hline(yintercept = avg_ratio, color = "red", linetype = "dashed", size = 1) + 
+  geom_text(aes(label = round(ratio, 2)), vjust = 0.55, size = 2, color = "black", angle = 90, nudge_y= 0.07, fontface = "bold") + 
+  scale_fill_manual(values = c("FALSE" = "blue", "TRUE" = "orange")) + 
+  labs(
+    x = "Nucleotide Position (3' -> 5')",
+    y = "MS Intensity Ratio",
+    title = ""
+  ) +
+  theme_classic() + 
+  theme(
+    axis.text.x = element_blank(),
+    panel.grid = element_blank(), 
+    panel.border = element_blank() 
+  )+ 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 2.7)) +
+  scale_x_discrete(expand = c(0.1, 0.1)) 
+
+
+ggplot(figure3a_df, aes(x = as.numeric(ratio))) +
+  geom_histogram(
+    binwidth = 0.1, 
+    boundary = 0,  
+    fill = "skyblue", 
+    color = "black", 
+    alpha = 0.7, 
+    aes(y = ..count..)
+  ) + 
+  stat_function(
+    fun = function(x, mean, sd, n, bw) {
+      dnorm(x, mean = mean, sd = sd) * n * bw
+    },
+    args = list(
+      mean = mean, 
+      sd = sd, 
+      n = nrow(figure3a_df), 
+      bw = 0.1
+    ),
+    color = "red", 
+    size = 1
+  ) + 
+  labs(
+    x = "MS Intensity Ratio",
+    y = "Frequency",
+    title = "Distribution of MS Intensity Ratios"
+  ) +
+  xlim(0, 2.5) +
+  theme_classic() +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 12)) + 
+  annotate("text", x = 2, y = 9, label = "", size = 4, hjust = 0, color = "red") + 
+  annotate("text", x = 2, y = 8, label = "", size = 4, hjust = 0, color = "blue")
+
+
+```
+
+```{r, fig.width=10, fig.height=7}
+df_3d = read_xlsx("Result/Figure4/RNAABC_native_ladders.xlsx") %>% 
+  select(n_position, position_5, shape, RNA_type, ladder_type, sum_intensity, log_intensity, relative_abundance) %>% 
+  slice(-c(1, 37, 73))
+
+plot_abundance = function(ladder_type_input, title, color){
+  df_3d %>%
+  filter(ladder_type == ladder_type_input) %>%
+  ggplot(aes(x = factor(n_position), y = relative_abundance)) +
+  geom_bar(stat = "identity", fill = color, color = "black") +
+  labs(
+    x = "Position",
+    y = "Relative Abundance",
+    title = title
+  ) +
+  theme_minimal()
+}
+
+#RNA-A
+fig1 = plot_abundance("RNA-A native 3'", "Relative Abundance of RNA-A 3' ladder fragments", "skyblue")
+fig2 = plot_abundance("RNA-A native 5'", "Relative Abundance of RNA-A 5' ladder fragments", "skyblue")
+
+#RNA-B
+fig3 = plot_abundance("RNA-B native 3'", "Relative Abundance of RNA-B 3' ladder fragments", "#A8E6CF")
+fig4 = plot_abundance("RNA-B native 5'", "Relative Abundance of RNA-B 5' ladder fragments", "#A8E6CF")
+
+#RNA-C
+fig5 = plot_abundance("RNA-C native 3'", "Relative Abundance of RNA-C 3' ladder fragments", "#FF8B94")
+fig6 = plot_abundance("RNA-C native 5'", "Relative Abundance of RNA-C 5' ladder fragments", "#FF8B94")
+
+fig1/fig2/fig3/fig4/fig5/fig6
+
+plot_abundance = function(ladder_type_input, title){
+  df_3d %>%
+    filter(ladder_type %in% ladder_type_input) %>%
+    ggplot(aes(x = factor(n_position), y = relative_abundance, fill = RNA_type)) +  
+    geom_bar(stat = "identity", position = "dodge", color = "black") +            
+    labs(
+      x = "Position",
+      y = "Relative Abundance",
+      title = title,
+      fill = "RNA Type"   
+    ) +
+    theme_minimal()
+}
+
+fig1 = plot_abundance(c("RNA-A native 3'", "RNA-B native 3'", "RNA-C native 3'"), "Relative Abundance of 3' ladder fragments")
+fig2 = plot_abundance(c("RNA-A native 5'", "RNA-B native 5'", "RNA-C native 5'"), "Relative Abundance of 5' ladder fragments")
+
+fig1/fig2
+```
+
+```{r, fig.width=10, fig.height=7}
+set_up("N100N", "GGCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCCGUU", "Data/100mer_data/N100N/N100N_5min_T01_250204_LSS.xlsx", "synthetic_RNA", 22000, 0)
+
+prophet_5 = prophet(df, theo_5) 
+prophet_3 = prophet(df, theo_3)
+
+temp = rbind(prophet_5, prophet_3)
+
+ggplot(prophet_3, aes(x = factor(n_position), y = relative_abundance)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  labs(
+    x = "Position",
+    y = "Relative Abundance",
+    title = "Relative Abundance by Position"
+  ) +
+  theme_minimal()
+
+ggplot(prophet_5, aes(x = factor(n_position), y = relative_abundance)) +
+  geom_bar(stat = "identity", fill = "red", color = "black") +
+  labs(
+    x = "Position",
+    y = "Relative Abundance",
+    title = "Relative Abundance by Position"
+  ) +
+  theme_minimal()
+
+
+
+set_up("N100N", "GGCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCCGUU", "Data/100mer_data/N100N/N100N_20min_T01_250204_LSS.xlsx", "synthetic_RNA", 22000, 0)
+
+prophet_5 = prophet(df, theo_5) 
+prophet_3 = prophet(df, theo_3)
+
+temp = rbind(temp, prophet_5, prophet_3)
+
+ggplot(prophet_3, aes(x = factor(n_position), y = relative_abundance)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  labs(
+    x = "Position",
+    y = "Relative Abundance",
+    title = "Relative Abundance by Position"
+  ) +
+  theme_minimal()
+
+ggplot(prophet_5, aes(x = factor(n_position), y = relative_abundance)) +
+  geom_bar(stat = "identity", fill = "red", color = "black") +
+  labs(
+    x = "Position",
+    y = "Relative Abundance",
+    title = "Relative Abundance by Position"
+  ) +
+  theme_minimal()
+
+write_xlsx(temp, "100N_ladder_fragments_5min_20min.xlsx")
+
+```
+

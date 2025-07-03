@@ -22,7 +22,7 @@ source("blind_seq.R")
 
 # get your dictionary file ready
 dictionary = read_xlsx("Data/uni_dictionary.xlsx")
-#dictionary = dictionary[c(1, 2, 3, 4),] #make adjustment to the dictionary if you want to restrict choice range
+dictionary = dictionary[c(1, 2, 3, 4),] #make adjustment to the dictionary if you want to restrict choice range
 ```
 
 ```{r, echo = FALSE, warning=FALSE}
@@ -33,7 +33,7 @@ dictionary = read_xlsx("Data/uni_dictionary.xlsx")
 # fifth variable: the intact mass limit for your sample(ex. >= 24000Da)
 # sixth variable: the number of interval detected lower limit set for filtering purpose 
 
-set_up("100N", "GUCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUU", "Data/100mer_data/mixture/Suyue/100nt_10_M_NonM_70_30_AD.xlsx", "synthetic_RNA", 22000, 0)
+set_up("100N", "GUCAGGAUGGCCGAGUGGUCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUU", "Data/100mer_data/100N/100N_5min_Sihang_05082310.xlsx", "synthetic_RNA", 22000, 0)
 
 prophet_5 = prophet(df, theo_5) #this will be the data frame for matching result, not sequencing, it acts as a verification
 prophet_3 = prophet(df, theo_3) #this will be the data frame for matching result, not sequencing, it acts as a verification
@@ -93,7 +93,7 @@ plot_position_abundance(prophet_5, prophet_3, "5' ladder", "3' ladder")
 # first variable: the output data frame from nested algorithm
 # second variable: the minimum length for ladders you want to include in your result file
 # third variable: the location of your original data file
-output_ladders_found(algorithm_output, 10, file_location)
+output_ladders_found(algorithm_output, 3, file_location)
 
 # first variable: the point version result file location
 plot_ladders("Result/blind_sequencing_result_point_version.xlsx")

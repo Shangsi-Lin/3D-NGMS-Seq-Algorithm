@@ -1,0 +1,73 @@
+---
+title: "figure6"
+author: "Shangsi Lin"
+date: "2025-01-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("figure6.R")
+```
+
+```{r figure5b}
+homology_df = read_xlsx("Result/Figure6/100N_homology_df.xlsx") %>% 
+  drop_na() %>% 
+  mutate(sum_intensity = as.numeric(sum_intensity), relative_abundance = as.numeric(relative_abundance))
+
+ggplot(homology_df, aes(x = monoisotopic_mass/1000, y = log10(sum_intensity), color = identity)) +
+  geom_point(size = 4, alpha = 0.9) +  
+  labs(x = "Monoisotopic Mass(kDa)", y = "Log10(Intensity)", color = "Identity") +
+  theme_classic() + 
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, 34, by = 4)) +
+  scale_y_continuous(name = "Log10(Intensity)", limits = c(2, 8), breaks = seq(2, 8, by = 2)) +
+  theme(text = element_text(size = 14))
+
+ggplot(homology_df, aes(x = monoisotopic_mass/1000, y = relative_abundance, color = identity)) +
+  geom_point(size = 3, alpha = 0.9) +  
+  labs(x = "Monoisotopic Mass(kDa)", y = "Log10(Intensity)", color = "Identity") +
+  theme_classic() + 
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, 34, by = 4)) +
+  scale_y_continuous(name = "Relative Abundance", limits = c(0, 100)) +
+  theme(text = element_text(size = 14))
+
+ggplot(homology_df %>% filter(monoisotopic_mass >= 30000), aes(x = monoisotopic_mass/1000, y = log10(sum_intensity), color = identity)) +
+  geom_point(size = 6, alpha = 0.9) +  
+  labs(x = "Monoisotopic Mass(kDa)", y = "Log10(Intensity)", color = "Identity") +
+  theme_classic() + 
+    scale_x_continuous(name = "Monoisotopic Mass(kDa)", limits = c(32.270,32.5), breaks = seq(32.2, 32.5, by = 0.1)) +
+  theme(text = element_text(size = 14))
+```
+
+```{r Figure5c}
+df = read_xlsx("Result/Figure6/impurity.xlsx") %>% 
+  mutate(log_intensity = log10(sum_intensity)) 
+df = df %>% 
+  mutate(layer_number = paste0("layer #", layer_number))
+```
+
+```{r, fig.width=16, fig.height=6}
+ggplot(df, aes(x = monoisotopic_mass/1000, y = apex_rt, color = log_intensity, label = base_name)) + 
+  geom_point(size = 3) +
+  scale_color_gradientn(colors = c("blue", "orange", "red")) +  
+  facet_wrap(~layer_number, scales = "free_y", ncol = 2) +  # Free y-axis, shared x-axis within columns
+  labs(x = "Monoisotopic Mass(kDa)", y = "Retention Time(min)", color = "Log(Intensity)") +
+  scale_x_continuous(name = "Monoisotopic Mass (kDa)", breaks = seq(0, 16, by = 2)) +
+  scale_y_continuous(name = "Retention Time (min)", limits = c(0,20), breaks = seq(0, 20, by = 4)) +
+  theme_classic() +
+  geom_text(vjust = -1, size = 3) +
+  theme(
+    strip.text = element_text(size = 10),
+    axis.text.x = element_text()
+  ) +
+  theme(
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    axis.text.x = element_text(size = 8),
+    axis.text.y = element_text(size = 8),
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 8)
+  )
+```
+
+
